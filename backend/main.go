@@ -5,11 +5,14 @@ import (
 	"log"
 	"net/http"
 
+	"github.com/AndreiMartynenko/dex-trader-x/backend/config"
 	"github.com/gorilla/mux"
 )
 
 func main() {
 	// Load environment variables
+	config.LoadConfig()
+
 	// Create a new router
 	router := mux.NewRouter()
 
