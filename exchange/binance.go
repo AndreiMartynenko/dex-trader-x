@@ -13,10 +13,12 @@ import (
 
 var binanceClient *binance.Client
 
+// InitBinance initializes the Binance API client
 func InitBinance() {
 	binanceClient = binance.NewClient(config.BinanceAPIKey, config.BinanceAPISecret)
 }
 
+// GetBinancePrice fetches the latest price for a given symbol (e.g., BTCUSDT)
 func GetBinancePrice(symbol string) (float64, error) {
 	prices, err := binanceClient.NewListPricesService().Do(context.Background())
 	if err != nil {
@@ -26,11 +28,8 @@ func GetBinancePrice(symbol string) (float64, error) {
 
 	for _, p := range prices {
 		if p.Symbol == symbol {
-			fmt.Println("Binance Price:", p.Price)
-			price, err := strconv.ParseFloat(p.Price, 64)
-			if err != nil {
-				return 0, err
-			}
+			price, _ := strconv.ParseFloat(p.Price, 64)
+			fmt.Println("🔹 Binance Price:", price)
 			return price, nil
 		}
 	}
