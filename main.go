@@ -34,8 +34,7 @@ func main() {
 
 	// Fetch Uniswap Prices
 	fmt.Println("\n🚀 Fetching Prices from Uniswap V3...")
-	uniswapPairs := config.UniswapPairs
-	for _, pair := range uniswapPairs {
+	for _, pair := range config.UniswapPairs {
 		pair = strings.ReplaceAll(pair, "/", "")
 		fmt.Printf("\n🔍 Fetching %s Price from Uniswap...\n", pair)
 
