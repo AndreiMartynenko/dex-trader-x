@@ -20,6 +20,11 @@ func InitBinance() {
 
 // FetchPricesForSelectedSymbols fetches prices for predefined symbols from Binance
 func FetchPricesForSelectedSymbols() (map[string]float64, error) {
+	if binanceClient == nil {
+		log.Println("❌ Binance client is not initialized. Call InitBinance() first.")
+		return nil, fmt.Errorf("binance client not initialized")
+	}
+
 	priceMap := make(map[string]float64)
 
 	// Fetch all market prices
@@ -37,7 +42,7 @@ func FetchPricesForSelectedSymbols() (map[string]float64, error) {
 			if p.Symbol == symbol {
 				price, _ := strconv.ParseFloat(p.Price, 64)
 				priceMap[symbol] = price
-				fmt.Printf("✅ Binance Price for %s: %.2f USDT\n", symbol, price)
+				// fmt.Printf("✅ Binance Price for %s: %.2f USDT\n", symbol, price)
 			}
 		}
 	}
