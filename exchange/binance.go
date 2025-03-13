@@ -7,7 +7,6 @@ import (
 	"strconv"
 
 	"github.com/AndreiMartynenko/dex-trader-x/config"
-
 	"github.com/adshao/go-binance/v2"
 )
 
@@ -15,23 +14,37 @@ var binanceClient *binance.Client
 
 // InitBinance initializes the Binance API client
 func InitBinance() {
+	fmt.Println("✅ Using Binance API Key:", config.BinanceAPIKey[:6]+"********")
 	binanceClient = binance.NewClient(config.BinanceAPIKey, config.BinanceAPISecret)
 }
 
-// GetBinancePrice fetches the latest price for a given symbol (e.g., BTCUSDT)
-func GetBinancePrice(symbol string) (float64, error) {
+// FetchPricesForSelectedSymbols fetches prices for predefined symbols from Binance
+func FetchPricesForSelectedSymbols() (map[string]float64, error) {
+	priceMap := make(map[string]float64)
+
+	// Fetch all market prices
 	prices, err := binanceClient.NewListPricesService().Do(context.Background())
 	if err != nil {
-		log.Println("Error fetching Binance prices:", err)
-		return 0, err
+		log.Println("❌ Error fetching Binance prices:", err)
+		return nil, err
 	}
 
+	fmt.Println("🚀 Fetching Prices for Selected Symbols from Binance...\n")
+
+	// Loop through all Binance prices and match with selected symbols
 	for _, p := range prices {
-		if p.Symbol == symbol {
-			price, _ := strconv.ParseFloat(p.Price, 64)
-			fmt.Println("🔹 Binance Price:", price)
-			return price, nil
+		for _, symbol := range config.Symbols {
+			if p.Symbol == symbol {
+				price, _ := strconv.ParseFloat(p.Price, 64)
+				priceMap[symbol] = price
+				fmt.Printf("✅ Binance Price for %s: %.2f USDT\n", symbol, price)
+			}
 		}
 	}
-	return 0, fmt.Errorf("Symbol not found")
+
+	if len(priceMap) == 0 {
+		fmt.Println("❌ No matching symbols found in Binance API response!")
+	}
+
+	return priceMap, nil
 }

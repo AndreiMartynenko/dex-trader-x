@@ -2,15 +2,27 @@ package main
 
 import (
 	"fmt"
+	"log"
 
 	"github.com/AndreiMartynenko/dex-trader-x/config"
+	"github.com/AndreiMartynenko/dex-trader-x/exchange"
 )
 
 func main() {
+	// Load API keys and symbol list
 	config.LoadConfig()
 
-	// Print API keys to check if they load (DO NOT DO THIS IN PRODUCTION)
-	fmt.Println("Binance API Key:", config.BinanceAPIKey)
-	fmt.Println("Infura API Key:", config.InfuraAPIKey)
-	fmt.Println("Wallet Private Key:", config.WalletPrivateKey[:10]+"********") // Hide most of the private key
+	// Initialize Binance API
+	exchange.InitBinance()
+
+	// Fetch selected prices
+	prices, err := exchange.FetchPricesForSelectedSymbols()
+	if err != nil {
+		log.Fatal("❌ Error fetching Binance prices:", err)
+	}
+
+	fmt.Println("\n✅ Final Binance Prices:")
+	for symbol, price := range prices {
+		fmt.Printf("   %s: %.2f USDT\n", symbol, price)
+	}
 }
