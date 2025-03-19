@@ -1,0 +1,30 @@
+{
+  "name": "dex-trader-x",
+  "version": "1.0.0",
+  "description": "├── contracts/       # Solidity Smart Contracts ├── bot/             # Golang Arbitrage Bot ├── scripts/         # Deployment scripts └── README.md",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/AndreiMartynenko/dex-trader-x.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/AndreiMartynenko/dex-trader-x/issues"
+  },
+  "homepage": "https://github.com/AndreiMartynenko/dex-trader-x#readme",
+  "devDependencies": {
+    "@nomicfoundation/hardhat-toolbox": "^5.0.0",
+    "hardhat": "^2.22.19"
+  },
+  "dependencies": {
+    "@openzeppelin/contracts": "^5.2.0",
+    "@uniswap/v2-core": "^1.0.1",
+    "@uniswap/v2-periphery": "^1.1.0-beta.0",
+    "dotenv": "^16.4.7"
+  }
+}

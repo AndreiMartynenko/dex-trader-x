@@ -1,1 +1,19 @@
+# Node.js dependencies
+node_modules/
+
+# Go dependencies
+bot/bin/
+bot/pkg/
+
+# Environment files (API keys, secrets)
 .env
+
+# Mac system files
+.DS_Store
+
+# Hardhat cache
+cache/
+artifacts/
+
+# VSCode workspace settings
+.vscode/
