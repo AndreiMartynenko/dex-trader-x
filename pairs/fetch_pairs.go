@@ -5,6 +5,7 @@ import (
 	"log"
 	"math/big"
 	"strings"
+	"time"
 
 	"github.com/ethereum/go-ethereum/accounts/abi"
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
@@ -34,6 +35,8 @@ func FetchPairs(factoryAddress string, client *ethclient.Client, exchange string
 
 	fmt.Printf("✅ Found %d pairs at factory %s (%s)\n", pairsCount, factoryAddress, exchange)
 
+	// Inside FetchPairs function, before making each request
+	time.Sleep(200 * time.Millisecond) // Adds a 200ms delay per request
 	var pairs []common.Address
 	for i := int64(0); i < 10 && i < pairsCount.Int64(); i++ { // Limit to 10 pairs
 		var pair common.Address

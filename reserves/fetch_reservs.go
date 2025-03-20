@@ -1,8 +1,11 @@
 package reserves
 
 import (
+	"fmt"
+	"log"
 	"math/big"
 	"strings"
+	"time"
 
 	"github.com/ethereum/go-ethereum/accounts/abi"
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
@@ -10,20 +13,34 @@ import (
 	"github.com/ethereum/go-ethereum/ethclient"
 )
 
-// ABI for Uniswap/SushiSwap Pairs
-const pairABI = `[{"constant":true,"inputs":[],"name":"getReserves","outputs":[{"internalType":"uint112","name":"_reserve0","type":"uint112"},{"internalType":"uint112","name":"_reserve1","type":"uint112"},{"internalType":"uint32","name":"_blockTimestampLast","type":"uint32"}],"payable":false,"stateMutability":"view","type":"function"}]`
+// Uniswap/SushiSwap Pair ABI
+const pairABI = `[{"constant":true,"inputs":[],"name":"getReserves","outputs":[{"internalType":"uint112","name":"reserve0","type":"uint112"},{"internalType":"uint112","name":"reserve1","type":"uint112"},{"internalType":"uint32","name":"blockTimestampLast","type":"uint32"}],"payable":false,"stateMutability":"view","type":"function"},
+{"constant":true,"inputs":[],"name":"token0","outputs":[{"internalType":"address","name":"","type":"address"}],"payable":false,"stateMutability":"view","type":"function"},
+{"constant":true,"inputs":[],"name":"token1","outputs":[{"internalType":"address","name":"","type":"address"}],"payable":false,"stateMutability":"view","type":"function"}]`
 
-func GetReserves(pairAddress common.Address, client *ethclient.Client) (*big.Int, *big.Int, error) {
-	parsedABI, _ := abi.JSON(strings.NewReader(pairABI))
-	contract := bind.NewBoundContract(pairAddress, parsedABI, client, client, client)
+// GetReserves fetches the reserves of a pair contract
+func GetReserves(pairAddress string, client *ethclient.Client) (reserve0, reserve1 *big.Int, err error) {
+	pairAddr := common.HexToAddress(pairAddress)
 
-	var reserves []*big.Int
-	var result []interface{}
-	err := contract.Call(nil, &result, "getReserves")
+	parsedABI, err := abi.JSON(strings.NewReader(pairABI))
 	if err != nil {
+		log.Fatalf("Error parsing pair ABI: %v", err)
+	}
+
+	contract := bind.NewBoundContract(pairAddr, parsedABI, client, client, client)
+
+	// Inside GetReserves function, before making each request
+	time.Sleep(200 * time.Millisecond) // Adds a 200ms delay per request
+	var result []interface{}
+	err = contract.Call(nil, &result, "getReserves")
+	if err != nil {
+		log.Printf("Error fetching reserves for pair %s: %v", pairAddress, err)
 		return nil, nil, err
 	}
 
-	reserves = []*big.Int{result[0].(*big.Int), result[1].(*big.Int)}
-	return reserves[0], reserves[1], nil
+	reserve0 = result[0].(*big.Int)
+	reserve1 = result[1].(*big.Int)
+	fmt.Printf("🔹 Reserves for pair %s: Reserve0 = %s, Reserve1 = %s\n", pairAddress, reserve0.String(), reserve1.String())
+
+	return reserve0, reserve1, nil
 }

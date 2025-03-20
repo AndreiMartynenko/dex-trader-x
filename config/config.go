@@ -1,66 +1,68 @@
-// package config
-
-// import (
-// 	"log"
-// 	"os"
-
-// 	"github.com/joho/godotenv"
-// )
-
-// // Global Config Variables
-// var (
-// 	InfuraURL        string
-// 	PrivateKey       string
-// 	UniswapFactory   = "0x5C69bEe701ef814a2B6a3EDD4B1652CB9cc5A"
-// 	SushiSwapFactory = "0xc0aee478e3658e2610c5f7a4a2e1777ce9e4f2ac"
-// )
-
-// // Load Environment Variables
-// func LoadEnv() {
-// 	err := godotenv.Load(".env")
-// 	if err != nil {
-// 		log.Fatalf("Error loading .env file: %v", err)
-// 	}
-
-// 	InfuraURL = os.Getenv("INFURA_URL")
-// 	PrivateKey = os.Getenv("PRIVATE_KEY")
-
-// 	if InfuraURL == "" || PrivateKey == "" {
-// 		log.Fatal("Missing essential environment variables. Check .env file")
-// 	}
-// }
-
 package config
 
 import (
+	"fmt"
 	"log"
 	"os"
 
+	"github.com/ethereum/go-ethereum/ethclient"
 	"github.com/joho/godotenv"
 )
 
 var (
+	AlchemyURL       string
 	InfuraURL        string
 	UniswapFactory   string
 	SushiSwapFactory string
 )
 
-// LoadEnv loads environment variables from the `.env` file
 func LoadEnv() error {
 	err := godotenv.Load()
 	if err != nil {
-		log.Printf("Warning: No .env file found or could not be loaded: %v", err)
-		// Not a fatal error, return nil
-		return nil
+		log.Println("⚠️ Warning: .env file not found, using system environment variables.")
 	}
 
+	AlchemyURL = os.Getenv("ALCHEMY_URL")
 	InfuraURL = os.Getenv("INFURA_URL")
+
+	// Load Factory Addresses
 	UniswapFactory = os.Getenv("UNISWAP_FACTORY")
 	SushiSwapFactory = os.Getenv("SUSHISWAP_FACTORY")
 
-	if InfuraURL == "" || UniswapFactory == "" || SushiSwapFactory == "" {
-		log.Println("⚠️ Warning: One or more required environment variables are missing!")
+	if UniswapFactory == "" || SushiSwapFactory == "" {
+		log.Fatal("🚨 Missing UNISWAP_FACTORY or SUSHISWAP_FACTORY in environment variables!")
 	}
 
+	if AlchemyURL == "" && InfuraURL == "" {
+		log.Fatal("🚨 Missing ALCHEMY_URL and INFURA_URL in environment variables. At least one is required!")
+	}
 	return nil
+}
+
+// GetEthereumClient tries Alchemy first, then Infura if Alchemy fails
+func GetEthereumClient() (*ethclient.Client, error) {
+	var client *ethclient.Client
+	var err error
+
+	// Try Alchemy First
+	if AlchemyURL != "" {
+		client, err = ethclient.Dial(AlchemyURL)
+		if err == nil {
+			fmt.Println("✅ Connected to Ethereum via Alchemy")
+			return client, nil
+		}
+		log.Println("⚠️ Alchemy connection failed. Trying Infura...")
+	}
+
+	// Try Infura If Alchemy Fails
+	if InfuraURL != "" {
+		client, err = ethclient.Dial(InfuraURL)
+		if err == nil {
+			fmt.Println("✅ Connected to Ethereum via Infura")
+			return client, nil
+		}
+		log.Println("❌ Both Alchemy and Infura failed to connect!")
+	}
+
+	return nil, fmt.Errorf("unable to connect to Ethereum via Alchemy or Infura")
 }

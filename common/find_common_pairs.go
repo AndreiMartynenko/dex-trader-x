@@ -23,7 +23,7 @@ func FindCommonPairs(uniswapPairs, sushiPairs []common.Address) []common.Address
 	return commonPairs
 }
 
-func printCommonPairs(commonPairs []common.Address) {
+func PrintCommonPairs(commonPairs []common.Address) {
 	fmt.Println("\n✅ Common Pairs Between Uniswap & SushiSwap:")
 	for _, pair := range commonPairs {
 		fmt.Println(pair.Hex())
