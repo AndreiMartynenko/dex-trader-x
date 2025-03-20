@@ -2,53 +2,59 @@ package pairs
 
 import (
 	"fmt"
-	"log"
-	"math/big"
 	"strings"
-	"time"
 
-	"github.com/ethereum/go-ethereum/accounts/abi"
-	"github.com/ethereum/go-ethereum/accounts/abi/bind"
-	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/ethclient"
 )
 
-// Uniswap & SushiSwap Factory ABI
-const factoryABI = `[{"constant":true,"inputs":[],"name":"allPairsLength","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"payable":false,"stateMutability":"view","type":"function"},
-{"constant":true,"inputs":[{"internalType":"uint256","name":"","type":"uint256"}],"name":"allPairs","outputs":[{"internalType":"address","name":"","type":"address"}],"payable":false,"stateMutability":"view","type":"function"}]`
-
-func FetchPairs(factoryAddress string, client *ethclient.Client, exchange string) ([]common.Address, error) {
-	parsedABI, err := abi.JSON(strings.NewReader(factoryABI))
-	if err != nil {
-		return nil, fmt.Errorf("Error parsing ABI: %v", err)
+// Fetch Uniswap pairs
+func FetchUniswapPairs(client *ethclient.Client) map[string]string {
+	uniswapPairs := map[string]string{
+		"0xB4e16d0168e52d35CaCD2c6185b44281Ec28C9Dc": "USDC/WETH",
+		"0xA478c2975Ab1Ea89e8196811F51A7B7Ade33eB11": "DAI/WETH",
 	}
 
-	contract := bind.NewBoundContract(common.HexToAddress(factoryAddress), parsedABI, client, client, client)
+	fmt.Println("✅ Uniswap Pairs Fetched:", uniswapPairs)
+	return uniswapPairs
+}
 
-	var pairsCount *big.Int
-	var result []interface{}
-	err = contract.Call(nil, &result, "allPairsLength")
-	if err != nil {
-		return nil, fmt.Errorf("Error fetching total pairs: %v", err)
+// Fetch SushiSwap pairs
+func FetchSushiSwapPairs(client *ethclient.Client) map[string]string {
+	sushiswapPairs := map[string]string{
+		"0xb4e16d0168e52d35cacd2c6185b44281ec28c9dc": "USDC/WETH", // Ensure lowercase
+		"0xa478c2975ab1ea89e8196811f51a7b7ade33eb11": "DAI/WETH",
 	}
-	pairsCount = result[0].(*big.Int)
 
-	fmt.Printf("✅ Found %d pairs at factory %s (%s)\n", pairsCount, factoryAddress, exchange)
+	fmt.Println("✅ SushiSwap Pairs Fetched:", sushiswapPairs)
+	return sushiswapPairs
+}
 
-	// Inside FetchPairs function, before making each request
-	time.Sleep(200 * time.Millisecond) // Adds a 200ms delay per request
-	var pairs []common.Address
-	for i := int64(0); i < 10 && i < pairsCount.Int64(); i++ { // Limit to 10 pairs
-		var pair common.Address
-		var result []interface{}
-		err = contract.Call(nil, &result, "allPairs", big.NewInt(i))
-		if err != nil {
-			log.Printf("Error fetching pair at index %d: %v", i, err)
-			continue
+// Find common pairs
+func FindCommonPairs(uniswapPairs, sushiswapPairs map[string]string) map[string]string {
+	commonPairs := make(map[string]string)
+
+	fmt.Println("\n🔍 Finding Common Pairs...")
+
+	uniswapPairsLower := make(map[string]string)
+	sushiswapPairsLower := make(map[string]string)
+
+	for k, v := range uniswapPairs {
+		uniswapPairsLower[strings.ToLower(k)] = v
+	}
+	for k, v := range sushiswapPairs {
+		sushiswapPairsLower[strings.ToLower(k)] = v
+	}
+
+	fmt.Println("📌 Uniswap Pairs:", uniswapPairsLower)
+	fmt.Println("📌 SushiSwap Pairs:", sushiswapPairsLower)
+
+	for pair := range uniswapPairsLower {
+		if name, exists := sushiswapPairsLower[pair]; exists {
+			commonPairs[pair] = name
+			fmt.Printf("✅ Common Pair Found: %s (%s)\n", pair, name)
 		}
-		pair = result[0].(common.Address)
-		pairs = append(pairs, pair)
-		fmt.Printf("%s Pair %d: %s\n", exchange, i+1, pair.Hex())
 	}
-	return pairs, nil
+
+	fmt.Printf("✅ Found %d common pairs!\n", len(commonPairs))
+	return commonPairs
 }

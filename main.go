@@ -1,43 +1,55 @@
 package main
 
 import (
-	"fmt"
-	"log"
-
-	"dex-trader-x/config"
+	"dex-trader-x/arbitrage"
 	"dex-trader-x/pairs"
 	"dex-trader-x/reserves"
+	"fmt"
+	"log"
+	"os"
+
+	"github.com/ethereum/go-ethereum/ethclient"
+	"github.com/joho/godotenv"
 )
 
 func main() {
-	// Load environment variables
-	if err := config.LoadEnv(); err != nil {
-		log.Fatalf("Error loading .env file: %v", err)
+	// Load environment variables from .env
+	err := godotenv.Load()
+	if err != nil {
+		log.Fatal("❌ Error loading .env file")
 	}
 
-	// Connect to Ethereum (Auto-switch between Alchemy & Infura)
-	fmt.Println("🚀 Connecting to Ethereum...")
-	client, err := config.GetEthereumClient()
-	if err != nil {
-		log.Fatalf("Error connecting to Ethereum: %v", err)
+	// Fetch Ethereum RPC URL from environment variable
+	ethRPC := os.Getenv("ALCHEMY_URL")
+	if ethRPC == "" {
+		log.Fatal("❌ Missing ALCHEMY_URL in .env file")
 	}
-	defer client.Close()
+
+	fmt.Println("🚀 Connecting to Ethereum...")
+
+	client, err := ethclient.Dial(ethRPC)
+	if err != nil {
+		log.Fatalf("❌ Failed to connect to Ethereum: %v", err)
+	}
+	fmt.Println("✅ Connected to Ethereum!")
 
 	// Fetch Uniswap and SushiSwap pairs
-	fmt.Println("Fetching Uniswap & SushiSwap Pairs...")
-	uniswapPairs, err := pairs.FetchPairs(config.UniswapFactory, client, "Uniswap")
-	if err != nil {
-		log.Fatalf("Error fetching Uniswap pairs: %v", err)
+	fmt.Println("\nFetching Uniswap & SushiSwap Pairs...")
+	uniswapPairs := pairs.FetchUniswapPairs(client)
+	sushiswapPairs := pairs.FetchSushiSwapPairs(client)
+
+	// Find common pairs
+	commonPairs := pairs.FindCommonPairs(uniswapPairs, sushiswapPairs)
+	if len(commonPairs) == 0 {
+		fmt.Println("❌ No common pairs found. Exiting.")
+		return
 	}
 
-	_, err = pairs.FetchPairs(config.SushiSwapFactory, client, "SushiSwap")
-	if err != nil {
-		log.Printf("Error fetching SushiSwap pairs: %v", err)
-	}
-
-	// Fetch reserves for pairs
+	// Fetch liquidity reserves
 	fmt.Println("\nFetching Liquidity Reserves...")
-	for _, pair := range uniswapPairs {
-		reserves.GetReserves(pair.Hex(), client)
-	}
+	reserves.FetchReserves(commonPairs, client)
+
+	// Check for arbitrage opportunities
+	fmt.Println("\n🔍 Checking Arbitrage Opportunities...")
+	arbitrage.CheckArbitrageOpportunities(commonPairs, client, uniswapPairs, sushiswapPairs)
 }

@@ -1,45 +1,64 @@
 package arbitrage
 
 import (
-	"fmt"
-	"log"
-	"math/big"
-
 	"dex-trader-x/reserves"
+	"fmt"
+	"math/big"
 
 	"github.com/ethereum/go-ethereum/ethclient"
 )
 
-// CheckArbitrage scans for profitable opportunities
-func CheckArbitrage(pairs map[string]string, client *ethclient.Client) {
-	fmt.Println("\n🔍 Checking for Arbitrage Opportunities...")
+// CheckArbitrageOpportunities scans for arbitrage opportunities
+func CheckArbitrageOpportunities(commonPairs map[string]string, client *ethclient.Client, uniswapPairs, sushiswapPairs map[string]string) {
+	for pairAddress, pairName := range commonPairs {
+		fmt.Printf("\n🔎 Checking %s (%s) for arbitrage...\n", pairAddress, pairName)
 
-	for pair, sushiPair := range pairs {
-		uniReserve0, uniReserve1, err := reserves.GetReserves(pair, client)
+		// Fetch Uniswap reserves
+		uniReserve0, uniReserve1, err := reserves.GetReservesFromExchange(pairAddress, client, "uniswap")
 		if err != nil {
-			log.Printf("Skipping pair %s due to error fetching Uniswap reserves\n", pair)
+			fmt.Printf("❌ Error fetching Uniswap reserves for %s: %v\n", pairAddress, err)
 			continue
 		}
+		fmt.Printf("✅ Uniswap %s Reserves: Reserve0 = %s, Reserve1 = %s\n", pairName, uniReserve0.String(), uniReserve1.String())
 
-		sushiReserve0, sushiReserve1, err := reserves.GetReserves(sushiPair, client)
+		// Fetch SushiSwap reserves
+		sushiReserve0, sushiReserve1, err := reserves.GetReservesFromExchange(pairAddress, client, "sushiswap")
 		if err != nil {
-			log.Printf("Skipping pair %s due to error fetching SushiSwap reserves\n", sushiPair)
+			fmt.Printf("❌ Error fetching SushiSwap reserves for %s: %v\n", pairAddress, err)
 			continue
 		}
+		fmt.Printf("✅ SushiSwap %s Reserves: Reserve0 = %s, Reserve1 = %s\n", pairName, sushiReserve0.String(), sushiReserve1.String())
 
-		// Calculate Uniswap and SushiSwap prices
-		uniPrice := new(big.Float).Quo(new(big.Float).SetInt(uniReserve1), new(big.Float).SetInt(uniReserve0))
-		sushiPrice := new(big.Float).Quo(new(big.Float).SetInt(sushiReserve1), new(big.Float).SetInt(sushiReserve0))
+		// Convert reserves to float for calculation
+		uniPrice := calculatePrice(uniReserve0, uniReserve1)
+		sushiPrice := calculatePrice(sushiReserve0, sushiReserve1)
 
-		priceDiff := new(big.Float).Sub(uniPrice, sushiPrice)
-		fmt.Printf("💱 Pair: %s | Uniswap Price: %f | SushiSwap Price: %f | Difference: %f\n",
-			pair, uniPrice, sushiPrice, priceDiff)
+		fmt.Printf("🔍 Uniswap %s Price = %.6f\n", pairName, uniPrice)
+		fmt.Printf("🔍 SushiSwap %s Price = %.6f\n", pairName, sushiPrice)
 
-		// Arbitrage condition: If price difference is > 1% and covers gas fees
-		gasCost := big.NewFloat(0.001)                                // Example: 0.001 ETH gas cost
-		threshold := new(big.Float).Mul(uniPrice, big.NewFloat(0.01)) // 1% threshold
-		if priceDiff.Cmp(threshold) > 0 && priceDiff.Cmp(gasCost) > 0 {
-			fmt.Printf("🚀 Arbitrage Opportunity Found! Buy from SushiSwap, Sell on Uniswap\n")
+		// Check if arbitrage is possible
+		if checkArbitrage(uniPrice, sushiPrice) {
+			fmt.Printf("✅ Arbitrage Opportunity Found for %s! 🚀\n", pairName)
+		} else {
+			fmt.Printf("❌ No arbitrage opportunity for %s.\n", pairName)
 		}
 	}
+}
+
+// calculatePrice computes the price as Reserve1 / Reserve0
+func calculatePrice(reserve0, reserve1 *big.Int) float64 {
+	dec0 := new(big.Float).SetInt(reserve0)
+	dec1 := new(big.Float).SetInt(reserve1)
+
+	result := new(big.Float).Quo(dec1, dec0) // reserve1 / reserve0
+	price, _ := result.Float64()
+	return price
+}
+
+// checkArbitrage determines if an arbitrage opportunity exists
+func checkArbitrage(price1, price2 float64) bool {
+	threshold := 0.005 // 0.5% difference
+	diff := (price1 - price2) / price2
+
+	return diff > threshold || diff < -threshold
 }
