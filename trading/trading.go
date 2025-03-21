@@ -62,9 +62,9 @@ func ExecuteTrade(pair string, buyExchange, sellExchange string, client *ethclie
 	}
 
 	// Initialize the router contract
-	routerContract, err := uniswap.NewUniswapV2Router02(router, client) // Adjust to match the actual constructor in the uniswap package
+	routerContract, err := uniswap.NewUniswap(router, client) // Adjust to match the actual constructor in the uniswap package
 	if err != nil {
-		log.Fatalf("❌ Error loading router contract: %v", err)
+		log.Fatalf("❌ Failed to initialize Uniswap router contract: %v", err)
 	}
 
 	// Dynamically resolve token path based on the trading pair
