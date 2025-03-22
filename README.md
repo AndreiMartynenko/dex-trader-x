@@ -33,6 +33,5 @@
 
 ## 🧠 Architecture Diagram
 
-*You can generate this using [draw.io](https://app.diagrams.net/) or [Excalidraw](https://excalidraw.com/). Here's a textual placeholder:*
 ![DeXTraderX drawio](https://github.com/user-attachments/assets/cf4b5695-0e22-45ea-a1b8-4e0b0e72766c)
 
