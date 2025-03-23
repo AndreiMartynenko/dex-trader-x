@@ -1,19 +1,31 @@
+const { ethers } = require("hardhat");
+
 async function main() {
-    const [deployer] = await ethers.getSigners();
-    console.log("🚀 Deploying contracts with account:", deployer.address);
+  // Manually create and connect your wallet
+  const wallet = new ethers.Wallet(process.env.WALLET_PRIVATE_KEY, ethers.provider);
 
-    const balance = await ethers.provider.getBalance(deployer.address);
-    console.log("💰 Account balance:", ethers.formatEther(balance), "ETH");
+  // Log the wallet address being used
+  console.log("Deploying with address:", wallet.address); // Should output your MetaMask address
 
-    const Arbitrage = await ethers.getContractFactory("FlashArbitrage");
-    const arbitrage = await Arbitrage.deploy();
+  // Fetch the wallet balance
+  const balance = await ethers.provider.getBalance(wallet.address);
+  console.log("Account balance:", ethers.utils.formatEther(balance), "ETH");
 
-    await arbitrage.waitForDeployment();
+  // Ensure sufficient funds for deployment
+  if (balance.lt(ethers.utils.parseEther("0.01"))) { // Adjust based on estimated gas fees
+    throw new Error("❌ Insufficient funds for deployment. Please ensure your wallet is funded.");
+  }
 
-    console.log("✅ FlashArbitrage deployed to:", arbitrage.target);
+  // Deploy the contract using your manually created wallet
+  const FlashArbitrage = await ethers.getContractFactory("FlashArbitrage", wallet);
+  const contract = await FlashArbitrage.deploy();
+
+  await contract.deployed();
+  console.log("✅ Contract successfully deployed at:", contract.target);
 }
 
+// Global error handling
 main().catch((error) => {
-    console.error(error);
-    process.exitCode = 1;
+  console.error("❌ Error deploying contract:", error);
+  process.exitCode = 1;
 });

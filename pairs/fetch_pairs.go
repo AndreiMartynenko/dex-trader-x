@@ -9,9 +9,13 @@ import (
 
 // Fetch Uniswap pairs
 func FetchUniswapPairs(client *ethclient.Client) map[string]string {
+	// Uniswap Pairs
 	uniswapPairs := map[string]string{
 		"0xB4e16d0168e52d35CaCD2c6185b44281Ec28C9Dc": "USDC/WETH",
 		"0xA478c2975Ab1Ea89e8196811F51A7B7Ade33eB11": "DAI/WETH",
+		"0xBb2b8038a1640196FbE3e38816F3e67Cba72D940": "WBTC/WETH",
+		"0xd3d2E2692501A5c9Ca623199D38826e513033a17": "UNI/WETH",
+		"0xa2107faF4604931f62f3C5ac62c1fE0896f4c4b9": "LINK/WETH",
 	}
 
 	fmt.Println("✅ Uniswap Pairs Fetched:", uniswapPairs)
@@ -20,9 +24,13 @@ func FetchUniswapPairs(client *ethclient.Client) map[string]string {
 
 // Fetch SushiSwap pairs
 func FetchSushiSwapPairs(client *ethclient.Client) map[string]string {
+	// SushiSwap Pairs
 	sushiswapPairs := map[string]string{
-		"0xb4e16d0168e52d35cacd2c6185b44281ec28c9dc": "USDC/WETH", // Ensure lowercase
-		"0xa478c2975ab1ea89e8196811f51a7b7ade33eb11": "DAI/WETH",
+		"0x397ff1542f962076d0bfe58ea045ffa2d347aca0": "USDC/WETH",
+		"0xc3d3a24a77afd62f1f5d2f4bc6ca2c1c3a317790": "DAI/WETH",
+		"0xceff51756c56ceffca006cd410b03ffc46dd3a58": "WBTC/WETH",
+		"0xd71ecff9342a5ced620049e616c5035f1db98620": "UNI/WETH",
+		"0x3954a503bf87f49443af1e37e732ab2a0456a41c": "LINK/WETH",
 	}
 
 	fmt.Println("✅ SushiSwap Pairs Fetched:", sushiswapPairs)
@@ -30,28 +38,18 @@ func FetchSushiSwapPairs(client *ethclient.Client) map[string]string {
 }
 
 // Find common pairs
+// Find common pairs by comparing names instead of addresses
 func FindCommonPairs(uniswapPairs, sushiswapPairs map[string]string) map[string]string {
 	commonPairs := make(map[string]string)
 
 	fmt.Println("\n🔍 Finding Common Pairs...")
 
-	uniswapPairsLower := make(map[string]string)
-	sushiswapPairsLower := make(map[string]string)
-
-	for k, v := range uniswapPairs {
-		uniswapPairsLower[strings.ToLower(k)] = v
-	}
-	for k, v := range sushiswapPairs {
-		sushiswapPairsLower[strings.ToLower(k)] = v
-	}
-
-	fmt.Println("📌 Uniswap Pairs:", uniswapPairsLower)
-	fmt.Println("📌 SushiSwap Pairs:", sushiswapPairsLower)
-
-	for pair := range uniswapPairsLower {
-		if name, exists := sushiswapPairsLower[pair]; exists {
-			commonPairs[pair] = name
-			fmt.Printf("✅ Common Pair Found: %s (%s)\n", pair, name)
+	for uniAddr, uniName := range uniswapPairs {
+		for sushiAddr, sushiName := range sushiswapPairs {
+			if strings.EqualFold(uniName, sushiName) {
+				commonPairs[uniAddr+"_"+sushiAddr] = uniName
+				fmt.Printf("✅ Common Pair Found: %s (%s)\n", uniName, uniAddr+" / "+sushiAddr)
+			}
 		}
 	}
 

@@ -30,7 +30,7 @@ contract FlashArbitrage is ReentrancyGuard, Ownable {
         IERC20(token1).transferFrom(msg.sender, address(this), amountIn);
         IERC20(token1).approve(router1, amountIn);
 
-        address ;
+        address[] memory path = new address[](2);
         path[0] = token1;
         path[1] = token2;
 
@@ -49,7 +49,7 @@ contract FlashArbitrage is ReentrancyGuard, Ownable {
         IERC20(token2).approve(router2, token2Received);
 
         // Step 2: Swap token2 → token1 on router2
-        address ;
+        address[] memory reversePath = new address[](2);
         reversePath[0] = token2;
         reversePath[1] = token1;
 
