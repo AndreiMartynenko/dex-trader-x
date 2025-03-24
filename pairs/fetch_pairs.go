@@ -7,7 +7,6 @@ import (
 	"github.com/ethereum/go-ethereum/ethclient"
 )
 
-// Fetch Uniswap pairs
 func FetchUniswapPairs(client *ethclient.Client) map[string]string {
 	// Uniswap Pairs
 	uniswapPairs := map[string]string{
@@ -18,7 +17,7 @@ func FetchUniswapPairs(client *ethclient.Client) map[string]string {
 		"0xa2107faF4604931f62f3C5ac62c1fE0896f4c4b9": "LINK/WETH",
 	}
 
-	fmt.Println("✅ Uniswap Pairs Fetched:", uniswapPairs)
+	fmt.Println("Uniswap Pairs Fetched:", uniswapPairs)
 	return uniswapPairs
 }
 
@@ -33,7 +32,7 @@ func FetchSushiSwapPairs(client *ethclient.Client) map[string]string {
 		"0x3954a503bf87f49443af1e37e732ab2a0456a41c": "LINK/WETH",
 	}
 
-	fmt.Println("✅ SushiSwap Pairs Fetched:", sushiswapPairs)
+	fmt.Println("SushiSwap Pairs Fetched:", sushiswapPairs)
 	return sushiswapPairs
 }
 
@@ -42,17 +41,17 @@ func FetchSushiSwapPairs(client *ethclient.Client) map[string]string {
 func FindCommonPairs(uniswapPairs, sushiswapPairs map[string]string) map[string]string {
 	commonPairs := make(map[string]string)
 
-	fmt.Println("\n🔍 Finding Common Pairs...")
+	fmt.Println("\nFinding Common Pairs...")
 
 	for uniAddr, uniName := range uniswapPairs {
 		for sushiAddr, sushiName := range sushiswapPairs {
 			if strings.EqualFold(uniName, sushiName) {
 				commonPairs[uniAddr+"_"+sushiAddr] = uniName
-				fmt.Printf("✅ Common Pair Found: %s (%s)\n", uniName, uniAddr+" / "+sushiAddr)
+				fmt.Printf("Common Pair Found: %s (%s)\n", uniName, uniAddr+" / "+sushiAddr)
 			}
 		}
 	}
 
-	fmt.Printf("✅ Found %d common pairs!\n", len(commonPairs))
+	fmt.Printf("Found %d common pairs!\n", len(commonPairs))
 	return commonPairs
 }

@@ -19,15 +19,15 @@ const pairABI = `[{"constant":true,"inputs":[],"name":"getReserves","outputs":[{
 // Get reserves for each pair
 func FetchReserves(pairs map[string]string, client *ethclient.Client) {
 	for pairAddress, pairName := range pairs {
-		fmt.Printf("\n🔹 Fetching reserves for %s (%s)...\n", pairAddress, pairName)
+		fmt.Printf("\nFetching reserves for %s (%s)...\n", pairAddress, pairName)
 
 		reserve0, reserve1, err := GetReserves(pairAddress, client)
 		if err != nil {
-			fmt.Printf("❌ Error fetching reserves for %s: %v\n", pairAddress, err)
+			fmt.Printf("Error fetching reserves for %s: %v\n", pairAddress, err)
 			continue
 		}
 
-		fmt.Printf("✅ %s - Reserve0: %s, Reserve1: %s\n", pairName, reserve0.String(), reserve1.String())
+		fmt.Printf("%s - Reserve0: %s, Reserve1: %s\n", pairName, reserve0.String(), reserve1.String())
 	}
 }
 
@@ -37,7 +37,7 @@ func GetReserves(pairAddress string, client *ethclient.Client) (reserve0, reserv
 
 	parsedABI, err := abi.JSON(strings.NewReader(pairABI))
 	if err != nil {
-		log.Fatalf("❌ Error parsing ABI: %v", err)
+		log.Fatalf("Error parsing ABI: %v", err)
 	}
 
 	contract := bind.NewBoundContract(pairAddr, parsedABI, client, client, client)
@@ -47,7 +47,7 @@ func GetReserves(pairAddress string, client *ethclient.Client) (reserve0, reserv
 	var result []interface{}
 	err = contract.Call(nil, &result, "getReserves")
 	if err != nil {
-		log.Printf("❌ Error fetching reserves for %s: %v", pairAddress, err)
+		log.Printf("Error fetching reserves for %s: %v", pairAddress, err)
 		return nil, nil, err
 	}
 
@@ -59,7 +59,7 @@ func GetReserves(pairAddress string, client *ethclient.Client) (reserve0, reserv
 
 // GetReservesFromExchange fetches liquidity reserves for a given pair from a specific exchange
 func GetReservesFromExchange(pairAddress string, client *ethclient.Client, exchange string) (*big.Int, *big.Int, error) {
-	fmt.Printf("🔹 Fetching reserves for %s (%s)...\n", pairAddress, exchange)
+	fmt.Printf("Fetching reserves for %s (%s)...\n", pairAddress, exchange)
 
 	// Simulating different reserves for Uniswap & SushiSwap
 	var reserve0, reserve1 *big.Int

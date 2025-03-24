@@ -8,39 +8,34 @@ import (
 	"github.com/ethereum/go-ethereum/ethclient"
 )
 
-// CheckArbitrageOpportunities scans for arbitrage opportunities
 func CheckArbitrageOpportunities(commonPairs map[string]string, client *ethclient.Client, uniswapPairs, sushiswapPairs map[string]string) {
 	for pairAddress, pairName := range commonPairs {
-		fmt.Printf("\n🔎 Checking %s (%s) for arbitrage...\n", pairAddress, pairName)
+		fmt.Printf("\nChecking %s (%s) for arbitrage...\n", pairAddress, pairName)
 
-		// Fetch Uniswap reserves
 		uniReserve0, uniReserve1, err := reserves.GetReservesFromExchange(pairAddress, client, "uniswap")
 		if err != nil {
-			fmt.Printf("❌ Error fetching Uniswap reserves for %s: %v\n", pairAddress, err)
+			fmt.Printf("Error fetching Uniswap reserves for %s: %v\n", pairAddress, err)
 			continue
 		}
-		fmt.Printf("✅ Uniswap %s Reserves: Reserve0 = %s, Reserve1 = %s\n", pairName, uniReserve0.String(), uniReserve1.String())
+		fmt.Printf("Uniswap %s Reserves: Reserve0 = %s, Reserve1 = %s\n", pairName, uniReserve0.String(), uniReserve1.String())
 
-		// Fetch SushiSwap reserves
 		sushiReserve0, sushiReserve1, err := reserves.GetReservesFromExchange(pairAddress, client, "sushiswap")
 		if err != nil {
-			fmt.Printf("❌ Error fetching SushiSwap reserves for %s: %v\n", pairAddress, err)
+			fmt.Printf("Error fetching SushiSwap reserves for %s: %v\n", pairAddress, err)
 			continue
 		}
-		fmt.Printf("✅ SushiSwap %s Reserves: Reserve0 = %s, Reserve1 = %s\n", pairName, sushiReserve0.String(), sushiReserve1.String())
+		fmt.Printf("SushiSwap %s Reserves: Reserve0 = %s, Reserve1 = %s\n", pairName, sushiReserve0.String(), sushiReserve1.String())
 
-		// Convert reserves to float for calculation
 		uniPrice := calculatePrice(uniReserve0, uniReserve1)
 		sushiPrice := calculatePrice(sushiReserve0, sushiReserve1)
 
-		fmt.Printf("🔍 Uniswap %s Price = %.6f\n", pairName, uniPrice)
-		fmt.Printf("🔍 SushiSwap %s Price = %.6f\n", pairName, sushiPrice)
+		fmt.Printf("Uniswap %s Price = %.6f\n", pairName, uniPrice)
+		fmt.Printf("SushiSwap %s Price = %.6f\n", pairName, sushiPrice)
 
-		// Check if arbitrage is possible
 		if checkArbitrage(uniPrice, sushiPrice) {
-			fmt.Printf("✅ Arbitrage Opportunity Found for %s! 🚀\n", pairName)
+			fmt.Printf("Arbitrage Opportunity Found for %s! \n", pairName)
 		} else {
-			fmt.Printf("❌ No arbitrage opportunity for %s.\n", pairName)
+			fmt.Printf("No arbitrage opportunity for %s.\n", pairName)
 		}
 	}
 }
@@ -55,7 +50,6 @@ func calculatePrice(reserve0, reserve1 *big.Int) float64 {
 	return price
 }
 
-// checkArbitrage determines if an arbitrage opportunity exists
 func checkArbitrage(price1, price2 float64) bool {
 	threshold := 0.005 // 0.5% difference
 	diff := (price1 - price2) / price2

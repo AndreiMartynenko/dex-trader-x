@@ -6,7 +6,7 @@ module.exports = {
   networks: {
     sepolia: {
       url: process.env.INFURA_URL,
-      accounts: [`0x${process.env.WALLET_PRIVATE_KEY}`], // Ensure this is loading your private key
+      accounts: [`0x${process.env.WALLET_PRIVATE_KEY}`],
     },
   },
 };

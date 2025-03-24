@@ -15,14 +15,13 @@ contract FlashArbitrage is ReentrancyGuard, Ownable {
         uint256 timestamp
     );
 
-    // Execute arbitrage between two routers
     function executeTrade(
         address router1,
         address router2,
         address token1,
         address token2,
         uint256 amountIn,
-        uint256 minProfit // ✅ Set minimum acceptable profit to avoid sandwich attacks
+        uint256 minProfit
     ) external onlyOwner nonReentrant {
         require(amountIn > 0, "Invalid amount");
 
@@ -67,13 +66,13 @@ contract FlashArbitrage is ReentrancyGuard, Ownable {
         uint256 profit = finalToken1Balance - amountIn;
         require(profit >= minProfit, "Profit too low");
 
-        // ✅ Transfer profit to the owner
+        // Transfer profit to the owner
         IERC20(token1).transfer(owner(), finalToken1Balance);
 
         emit ArbitrageExecuted(token1, token2, profit, block.timestamp);
     }
 
-    // ✅ Emergency withdrawal
+    // Emergency withdrawal
     function withdrawTokens(address token) external onlyOwner {
         uint256 balance = IERC20(token).balanceOf(address(this));
         require(balance > 0, "Nothing to withdraw");

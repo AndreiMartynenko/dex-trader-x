@@ -17,7 +17,7 @@ async function main() {
   const tokenContract = await ethers.getContractAt("IERC20", token1);
   await tokenContract.approve(flashArb.address, amountIn);
 
-  // Execute simulated arbitrage
+  // simulated arbitrage
   const tx = await flashArb.executeTrade(
     router1,
     router2,
@@ -27,7 +27,7 @@ async function main() {
     minProfit
   );
 
-  console.log("✅ Transaction submitted:", tx.hash);
+  console.log("Transaction submitted:", tx.hash);
 }
 
 main().catch((error) => {
